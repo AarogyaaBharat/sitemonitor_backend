@@ -6,6 +6,7 @@ const {
   get_performance_audit,
   get_security_audit,
   get_broken_links_audit,
+  get_search_performance,
 } = require("../controllers/audit.controller");
 
 const router = express.Router();
@@ -18,5 +19,6 @@ router.get("/seo/:id", get_seo_audit);
 router.get("/performance/:id", get_performance_audit);
 router.get("/security/:id", get_security_audit);
 router.get("/broken-links/:id", get_broken_links_audit);
+router.get("/search-performance/:id", get_search_performance);
 
 module.exports = router;

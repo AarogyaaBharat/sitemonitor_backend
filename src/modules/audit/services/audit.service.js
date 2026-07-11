@@ -7,11 +7,13 @@ function getModels(connection) {
   const { domainSchema } = require("../../domain/models/domain.schema");
   const { domainSummarySchema } = require("../../domain/models/domainSummary.schema");
   const { domainReportSchema } = require("../../domain/models/domainReport.schema");
+  const { searchPerformanceSchema } = require("../../performance/models/search_performance.schema");
 
   return {
     Domain: connection.models.Domain || connection.model("Domain", domainSchema, "domains"),
     DomainSummary: connection.models.DomainSummary || connection.model("DomainSummary", domainSummarySchema, "domain_summaries"),
     DomainReport: connection.models.DomainReport || connection.model("DomainReport", domainReportSchema, "domain_reports"),
+    SearchPerformance: connection.models.SearchPerformance || connection.model("SearchPerformance", searchPerformanceSchema, "search_performances"),
   };
 }
 
@@ -257,10 +259,80 @@ async function get_broken_links_audit_service({ tenantConnection, params }) {
   };
 }
 
+async function get_search_performance_service({ tenantConnection, params }) {
+  const { id: domainId } = params;
+
+  const { SearchPerformance, Domain } = getModels(tenantConnection);
+  
+  let domainDoc = await Domain.findOne({ 
+    $or: [
+      { _id: mongoose.Types.ObjectId.isValid(domainId) ? domainId : null }, 
+      { dm_id: !isNaN(Number(domainId)) ? Number(domainId) : null }
+    ], 
+    dm_is_deleted: false 
+  }).lean();
+
+  if (!domainDoc) {
+    return { statusCode: 404, success: false, message: "Domain not found" };
+  }
+
+  // Find the latest search performance report for this domain
+  const report = await SearchPerformance.findOne({ domainId: domainDoc._id }).sort({ scanDate: -1 }).lean();
+
+  if (!report) {
+    // Check if the user has connected their Google account at all
+    const mongoose = require("mongoose");
+    const { googleConnectionSchema } = require("../../auth/models/google_connection.schema");
+    const GoogleConnection = tenantConnection.models.GoogleConnection || tenantConnection.model("GoogleConnection", googleConnectionSchema, "google_connections");
+    
+    let googleConnection = null;
+    if (domainDoc.dm_user_id) {
+      const connQuery = { user_id: new mongoose.Types.ObjectId(domainDoc.dm_user_id) };
+      if (domainDoc.dm_gsc_email) {
+        connQuery.google_email = domainDoc.dm_gsc_email;
+      }
+      googleConnection = await GoogleConnection.findOne(connQuery).lean();
+    }
+    
+    if (!googleConnection) {
+      return {
+        statusCode: 404,
+        success: false,
+        errorType: "NO_CONNECTION",
+        message: "No Google account connected. Please connect your Google account.",
+      };
+    }
+
+    return {
+      statusCode: 404,
+      success: false,
+      errorType: "UNVERIFIED_SITE",
+      googleEmail: googleConnection.google_email,
+      message: `Google account connected (${googleConnection.google_email}), but we could not access Google Search Console data for ${domainDoc.dm_url}. Please ensure this domain is verified in your Google Search Console account.`,
+    };
+  }
+
+  return {
+    statusCode: 200,
+    success: true,
+    data: {
+      summaryMetrics: report.summaryMetrics,
+      topKeywords: report.topKeywords,
+      topPages: report.topPages,
+      devicePerformance: report.devicePerformance,
+      countryPerformance: report.countryPerformance,
+      indexStatus: report.indexStatus,
+      chartData: report.chartData,
+      scanDate: report.scanDate
+    },
+  };
+}
+
 module.exports = {
   get_audit_summary_service,
   get_seo_audit_service,
   get_performance_audit_service,
   get_security_audit_service,
   get_broken_links_audit_service,
+  get_search_performance_service,
 };

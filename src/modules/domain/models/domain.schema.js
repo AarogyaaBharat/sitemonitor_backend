@@ -29,6 +29,11 @@ const domainSchema = new mongoose.Schema({
     required: true,
     trim: true,
   },
+  dm_gsc_email: {
+    type: String,
+    default: null,
+    trim: true,
+  },
 
   // Crawl Settings
   dm_crawl_auto: {

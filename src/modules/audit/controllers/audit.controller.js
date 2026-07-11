@@ -4,6 +4,7 @@ const {
   get_performance_audit_service,
   get_security_audit_service,
   get_broken_links_audit_service,
+  get_search_performance_service,
 } = require("../services/audit.service");
 
 async function get_audit_summary(req, res) {
@@ -71,10 +72,24 @@ async function get_broken_links_audit(req, res) {
   }
 }
 
+async function get_search_performance(req, res) {
+  try {
+    const result = await get_search_performance_service({
+      tenantConnection: req.tenantConnection,
+      params: req.params,
+    });
+    return res.status(result.statusCode).json(result);
+  } catch (err) {
+    console.error("get_search_performance error:", err);
+    return res.status(500).json({ success: false, message: "Internal server error" });
+  }
+}
+
 module.exports = {
   get_audit_summary,
   get_seo_audit,
   get_performance_audit,
   get_security_audit,
   get_broken_links_audit,
+  get_search_performance,
 };

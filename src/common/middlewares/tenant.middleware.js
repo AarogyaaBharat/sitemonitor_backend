@@ -11,7 +11,17 @@ const { getTenantConnection } = require("../../config/mongooseTenant");
  *   // inside a route: req.tenantId, req.tenantConnection
  */
 async function tenantConnectionMiddleware(req, res, next) {
-  const tenantId = req.header("tenant_id");
+  let tenantId = req.header("tenant_id");
+  
+  if (!tenantId && req.query.state && (req.path.includes("google/callback") || req.originalUrl.includes("google/callback"))) {
+    try {
+      const stateObj = JSON.parse(Buffer.from(req.query.state, "base64").toString("utf8"));
+      tenantId = stateObj.tenantId;
+    } catch (err) {
+      console.error("Failed to parse tenantId from state query:", err);
+    }
+  }
+
   if (!tenantId) {
     return res.status(400).json({
       success: false,

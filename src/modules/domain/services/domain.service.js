@@ -93,6 +93,7 @@ async function create_domain_service({ tenantConnection, body, user, tenantId })
   const {
     dm_title,
     dm_url,
+    dm_gsc_email,
     dm_crawl_auto,
     dm_connections_per_min,
     dm_max_scanned_pages,
@@ -184,6 +185,7 @@ async function create_domain_service({ tenantConnection, body, user, tenantId })
     dm_user_id: loginUser._id,
     dm_title,
     dm_url: dm_url?.toLowerCase().trim(),
+    dm_gsc_email: dm_gsc_email || null,
     dm_crawl_auto: dm_crawl_auto ?? false,
     dm_connections_per_min: dm_connections_per_min || "normal",
     dm_max_scanned_pages: dm_max_scanned_pages || 0,
@@ -337,6 +339,7 @@ async function update_domain_service({ tenantConnection, params, body, user, ten
   const {
     dm_title,
     dm_url,
+    dm_gsc_email,
     dm_crawl_auto,
     dm_connections_per_min,
     dm_max_scanned_pages,
@@ -417,6 +420,7 @@ async function update_domain_service({ tenantConnection, params, body, user, ten
   const update = {};
   if (dm_title != null) update.dm_title = dm_title;
   if (dm_url != null) update.dm_url = dm_url.toLowerCase().trim();
+  if (dm_gsc_email !== undefined) update.dm_gsc_email = dm_gsc_email || null;
   if (dm_crawl_auto != null) update.dm_crawl_auto = dm_crawl_auto;
   if (dm_connections_per_min != null) update.dm_connections_per_min = dm_connections_per_min;
   if (dm_max_scanned_pages != null) update.dm_max_scanned_pages = dm_max_scanned_pages;
