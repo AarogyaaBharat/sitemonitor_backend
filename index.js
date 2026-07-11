@@ -3,6 +3,7 @@ const cors = require("cors");
 const path = require("path");
 const { helmetMiddleware, apiRateLimiter } = require("./src/common/middlewares/security.middleware");
 const { tenantConnectionMiddleware } = require("./src/common/middlewares/tenant.middleware");
+const encryptionMiddleware = require("./src/common/middlewares/encryption.middleware");
 const { superTenantMiddleware } = require("./src/common/middlewares/super_tenant.middleware");
 const { getMasterConnection } = require("./src/config/mongooseMaster");
 const adminRouter = require("./src/modules/admin/routes/admin.routes");
@@ -21,6 +22,7 @@ const domainPerformanceRouter = require("./src/modules/performance/routes/domain
 const qaRouter = require("./src/modules/qa/routes/qa.routes");
 const accessibilityRouter = require("./src/modules/accessibility/routes/accessibility.routes");
 const logsRouter = require("./src/modules/logs/routes/activityLog.routes");
+const sitemapRouter = require("./src/modules/sitemap/routes/sitemap.routes");
 const { activityLogSchema } = require("./src/modules/logs/models/activityLog.schema");
 
 global.createActivityLog = async (connection, { userId, userName, action, details, metadata = {} }) => {
@@ -44,6 +46,9 @@ const app = express();
 
 // Body parser
 app.use(express.json());
+
+// Encrypt responses
+app.use(encryptionMiddleware);
 
 // Proper CORS setup
 app.use(
@@ -152,6 +157,7 @@ app.use("/api/domain/performance", apiRateLimiter, tenantConnectionMiddleware, d
 app.use("/api/qa", apiRateLimiter, tenantConnectionMiddleware, qaRouter);
 app.use("/api/accessibility", apiRateLimiter, tenantConnectionMiddleware, accessibilityRouter);
 app.use("/api/logs", apiRateLimiter, tenantConnectionMiddleware, logsRouter);
+app.use("/api/sitemap", apiRateLimiter, sitemapRouter);
 
 // Global Search API (Flipkart/Amazon-style unified search)
 app.get("/api/global-search", apiRateLimiter, tenantConnectionMiddleware, async (req, res) => {

@@ -3,6 +3,7 @@ const { domainSchema } = require("../models/domain.schema");
 const { domainSummarySchema } = require("../models/domainSummary.schema");
 const { domainReportSchema } = require("../models/domainReport.schema");
 const { userSchema } = require("../../user/models/user.model");
+const { scan_sitemap_service } = require("../../sitemap/services/sitemap.service");
 
 function getUserModel(connection) {
   return (
@@ -1360,6 +1361,15 @@ async function trigger_domain_scan_service({ tenantConnection, params, user }) {
     console.log(`Successfully triggered immediate SEO scan in Master MS for: ${domain.dm_url}`);
   } catch (err) {
     console.error("Failed to trigger immediate SEO scan in Master MS:", err);
+  }
+
+  // Also trigger Sitemap scan in the background
+  try {
+    scan_sitemap_service(tenantConnection, domain).catch(err => {
+      console.error("Background sitemap scan failed:", err);
+    });
+  } catch(err) {
+    console.error("Failed to start sitemap scan:", err);
   }
 
   // Log activity
