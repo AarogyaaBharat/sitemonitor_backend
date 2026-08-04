@@ -3,7 +3,7 @@ const cors = require("cors");
 const path = require("path");
 const { helmetMiddleware, apiRateLimiter } = require("./src/common/middlewares/security.middleware");
 const { tenantConnectionMiddleware } = require("./src/common/middlewares/tenant.middleware");
-const encryptionMiddleware = require("./src/common/middlewares/encryption.middleware");
+
 const { superTenantMiddleware } = require("./src/common/middlewares/super_tenant.middleware");
 const { getMasterConnection } = require("./src/config/mongooseMaster");
 const adminRouter = require("./src/modules/admin/routes/admin.routes");
@@ -48,8 +48,7 @@ const app = express();
 // Body parser
 app.use(express.json());
 
-// Encrypt responses
-app.use(encryptionMiddleware);
+
 
 // Proper CORS setup
 app.use(

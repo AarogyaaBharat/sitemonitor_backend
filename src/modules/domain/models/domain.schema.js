@@ -190,6 +190,14 @@ const domainSchema = new mongoose.Schema({
     default: 'pending'
   },
   dm_policy_last_scan_at: { type: Date },
+  
+  dm_dark_pattern_status: {
+    type: String,
+    enum: ['pending', 'scanning', 'completed', 'failed'],
+    default: 'pending'
+  },
+  dm_dark_pattern_last_scan_at: { type: Date },
+
   dm_ignored_spellings: [{ type: String }],
 
   dm_qa_status: {
